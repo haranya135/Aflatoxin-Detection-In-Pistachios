@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>PureCheck — Test Sample</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    :root {
+      --gp: #95d5b2;
+      --gl: #40916c;
+      --dk: #081c15;
+      --rp: #ffb3ba;
+      --op: #ffc49b;
+      --yp: #ffe08a;
+      --dim: rgba(255, 255, 255, .48)
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--dk);
+      color: #fff;
+      min-height: 100vh
+    }
+
+    .bg {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 50% at 80% 20%, rgba(64, 145, 108, .12) 0%, transparent 60%), linear-gradient(160deg, #081c15 0%, #0d2818 60%, #0a1f12 100%);
+      z-index: 0
+    }
+
+    .grid {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-image: linear-gradient(rgba(64, 145, 108, .04) 1px, transparent 1px), linear-gradient(90deg, rgba(64, 145, 108, .04) 1px, transparent 1px);
+      background-size: 50px 50px
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 10;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px 80px
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, .06);
+      margin-bottom: 44px
+    }
+
+    .brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 900;
+      text-decoration: none;
+      color: #fff
+    }
+
+    .brand span {
+      background: linear-gradient(135deg, var(--gp), #52b788);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent
+    }
+
+    .back {
+      color: var(--dim);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color .2s
+    }
+
+    .back:hover {
+      color: var(--gp)
+    }
+
+    .ph {
+      text-align: center;
+      margin-bottom: 44px
+    }
+
+    .ph h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(28px, 5vw, 46px);
+      font-weight: 700;
+      margin-bottom: 10px
+    }
+
+    .ph p {
+      color: var(--dim);
+      font-size: 14px;
+      font-weight: 300
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      align-items: start
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, .03);
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 20px;
+      padding: 26px
+    }
+
+    .ptitle {
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gp);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .ptitle::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255, 255, 255, .06)
+    }
+
+    /* Mode tabs */
+    .mtabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 18px
+    }
+
+    .mtab {
+      flex: 1;
+      padding: 9px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, .1);
+      color: var(--dim);
+      background: rgba(255, 255, 255, .03);
+      transition: all .2s
+    }
+
+    .mtab.active {
+      background: rgba(149, 213, 178, .12);
+      border-color: rgba(149, 213, 178, .3);
+      color: var(--gp)
+    }
+
+    /* 5-band grid */
+    .band-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 14px
+    }
+
+    .band-slot {
+      border: 1.5px dashed rgba(149, 213, 178, .22);
+      border-radius: 10px;
+      padding: 10px 6px;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      min-height: 76px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all .25s
+    }
+
+    .band-slot:hover,
+    .band-slot.dov {
+      border-color: var(--gp);
+      background: rgba(149, 213, 178, .05)
+    }
+
+    .band-slot.filled {
+      border-color: var(--gl);
+      border-style: solid;
+      background: rgba(64, 145, 108, .08)
+    }
+
+    .band-slot input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%
+    }
+
+    .band-num {
+      font-size: 10px;
+      color: var(--dim);
+      letter-spacing: 1px;
+      text-transform: uppercase
+    }
+
+    .band-ico {
+      font-size: 20px
+    }
+
+    .band-name {
+      font-size: 10px;
+      color: var(--gp);
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 0 4px
+    }
+
+    .band-clear {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 16px;
+      height: 16px;
+      background: rgba(230, 57, 70, .7);
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      cursor: pointer;
+      z-index: 5
+    }
+
+    .band-slot.filled .band-clear {
+      display: flex
+    }
+
+    .band-hint {
+      font-size: 11px;
+      color: var(--dim);
+      line-height: 1.5;
+      margin-bottom: 10px
+    }
+
+    .warn {
+      background: rgba(201, 162, 39, .1);
+      border: 1px solid rgba(201, 162, 39, .25);
+      color: #ffe08a;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      margin-bottom: 12px;
+      display: none
+    }
+
+    /* NPY zone */
+    .npy-zone {
+      border: 2px dashed rgba(149, 213, 178, .22);
+      border-radius: 14px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all .3s
+    }
+
+    .npy-zone:hover,
+    .npy-zone.dov {
+      border-color: var(--gp);
+      background: rgba(149, 213, 178, .04)
+    }
+
+    .npy-zone input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%
+    }
+
+    .npy-ico {
+      font-size: 40px;
+      margin-bottom: 12px;
+      display: block
+    }
+
+    .npy-title {
+      font-size: 15px;
+      font-weight: 500;
+      margin-bottom: 6px
+    }
+
+    .npy-hint {
+      font-size: 12px;
+      color: var(--dim);
+      line-height: 1.5
+    }
+
+    .npy-formats {
+      margin-top: 12px;
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      flex-wrap: wrap
+    }
+
+    .ftag {
+      background: rgba(149, 213, 178, .1);
+      border: 1px solid rgba(149, 213, 178, .2);
+      color: var(--gp);
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 100px
+    }
+
+    #npy-pvw {
+      display: none;
+      margin-top: 14px;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative
+    }
+
+    #npy-pvw img {
+      width: 100%;
+      max-height: 180px;
+      object-fit: cover;
+      display: block;
+      border-radius: 10px
+    }
+
+    .povl {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(8, 28, 21, .8), transparent 50%);
+      border-radius: 10px;
+      pointer-events: none
+    }
+
+    .pfn {
+      position: absolute;
+      bottom: 10px;
+      left: 12px;
+      right: 36px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, .7);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .prm {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0, 0, 0, .6);
+      border: 1px solid rgba(255, 255, 255, .15);
+      color: #fff;
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      cursor: pointer;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s
+    }
+
+    .prm:hover {
+      background: #e63946
+    }
+
+    /* Buttons */
+    .bgrp {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px
+    }
+
+    .btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all .3s;
+      font-family: inherit
+    }
+
+    .btn-p {
+      background: linear-gradient(135deg, var(--gl), #2d6a4f);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(64, 145, 108, .3)
+    }
+
+    .btn-p:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(64, 145, 108, .4)
+    }
+
+    .btn-p:disabled {
+      opacity: .35;
+      cursor: not-allowed
+    }
+
+    .btn-d {
+      background: linear-gradient(135deg, #1a6b5a, #0f4a3f);
+      color: #fff;
+      border: 1px solid rgba(149, 213, 178, .2)
+    }
+
+    .btn-d:hover:not(:disabled) {
+      background: linear-gradient(135deg, #22876f, #1a6b5a);
+      transform: translateY(-2px)
+    }
+
+    .btn-d:disabled {
+      opacity: .3;
+      cursor: not-allowed
+    }
+
+    .btn-o {
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid rgba(255, 255, 255, .12);
+      color: rgba(255, 255, 255, .7)
+    }
+
+    .btn-o:hover {
+      background: rgba(255, 255, 255, .08);
+      color: #fff
+    }
+
+    /* Pipeline card */
+    .pcard {
+      background: rgba(64, 145, 108, .06);
+      border: 1px solid rgba(149, 213, 178, .12);
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-top: 20px
+    }
+
+    .pctitle {
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gp);
+      margin-bottom: 10px
+    }
+
+    .pipe {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 12px
+    }
+
+    .ps {
+      background: rgba(149, 213, 178, .1);
+      border: 1px solid rgba(149, 213, 178, .2);
+      padding: 4px 10px;
+      border-radius: 7px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, .7)
+    }
+
+    .pa {
+      color: var(--gp);
+      font-size: 12px
+    }
+
+    .legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, .05)
+    }
+
+    .li {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--dim)
+    }
+
+    .ld {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0
+    }
+
+    /* Loading */
+    #lp {
+      display: none;
+      text-align: center;
+      padding: 44px
+    }
+
+    .lring {
+      width: 52px;
+      height: 52px;
+      border: 3px solid rgba(149, 213, 178, .15);
+      border-top-color: var(--gp);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: 0 auto 14px
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .ltx {
+      color: var(--dim);
+      font-size: 13px
+    }
+
+    .lst {
+      color: var(--gp);
+      font-size: 12px;
+      margin-top: 4px
+    }
+
+    /* Empty */
+    #ep {
+      text-align: center;
+      padding: 52px 28px
+    }
+
+    /* Result */
+    #rp {
+      display: none
+    }
+
+    .verdict {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 20px;
+      border-radius: 14px;
+      margin-bottom: 20px
+    }
+
+    .v-g300 {
+      background: rgba(230, 57, 70, .08);
+      border: 1px solid rgba(230, 57, 70, .3)
+    }
+
+    .v-g160 {
+      background: rgba(224, 123, 57, .08);
+      border: 1px solid rgba(224, 123, 57, .3)
+    }
+
+    .v-l8 {
+      background: rgba(201, 162, 39, .08);
+      border: 1px solid rgba(201, 162, 39, .3)
+    }
+
+    .vico {
+      font-size: 36px;
+      flex-shrink: 0
+    }
+
+    .vbadge {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 5px
+    }
+
+    .bg300 {
+      background: rgba(230, 57, 70, .18);
+      color: var(--rp)
+    }
+
+    .bg160 {
+      background: rgba(224, 123, 57, .18);
+      color: var(--op)
+    }
+
+    .bl8 {
+      background: rgba(201, 162, 39, .18);
+      color: var(--yp)
+    }
+
+    .vtit {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 4px
+    }
+
+    .v-g300 .vtit {
+      color: var(--rp)
+    }
+
+    .v-g160 .vtit {
+      color: var(--op)
+    }
+
+    .v-l8 .vtit {
+      color: var(--yp)
+    }
+
+    .vdesc {
+      font-size: 12px;
+      color: rgba(255, 255, 255, .5);
+      line-height: 1.6;
+      margin-bottom: 4px;
+      font-weight: 300
+    }
+
+    .vrec {
+      font-size: 11px;
+      color: var(--dim);
+      font-style: italic;
+      line-height: 1.5
+    }
+
+    .csec {
+      margin-bottom: 20px
+    }
+
+    .chdr {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px
+    }
+
+    .clbl {
+      font-size: 12px;
+      color: var(--dim)
+    }
+
+    .cval {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff
+    }
+
+    .cbg {
+      height: 7px;
+      background: rgba(255, 255, 255, .06);
+      border-radius: 4px;
+      overflow: hidden
+    }
+
+    .cf {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 1.2s cubic-bezier(.4, 0, .2, 1);
+      width: 0
+    }
+
+    .fg300 {
+      background: linear-gradient(90deg, #e63946, #ff8fa3)
+    }
+
+    .fg160 {
+      background: linear-gradient(90deg, #e07b39, #ffc49b)
+    }
+
+    .fl8 {
+      background: linear-gradient(90deg, #c9a227, #ffe08a)
+    }
+
+    .sgrid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 20px
+    }
+
+    .sc {
+      background: rgba(255, 255, 255, .03);
+      border: 1px solid rgba(255, 255, 255, .06);
+      border-radius: 10px;
+      padding: 12px 8px;
+      text-align: center;
+      transition: all .3s
+    }
+
+    .sc.active {
+      border-color: rgba(255, 255, 255, .22);
+      background: rgba(255, 255, 255, .07)
+    }
+
+    .sn {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 2px
+    }
+
+    .sl_ {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 1px
+    }
+
+    .ss {
+      font-size: 9px;
+      color: var(--dim)
+    }
+
+    .cg3 {
+      color: var(--rp)
+    }
+
+    .cg1 {
+      color: var(--op)
+    }
+
+    .cl8 {
+      color: var(--yp)
+    }
+
+    .asec {
+      margin-bottom: 18px
+    }
+
+    .ssub {
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 10px
+    }
+
+    .atag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 100px;
+      font-size: 12px;
+      margin: 3px 3px 3px 0
+    }
+
+    .tg3 {
+      background: rgba(230, 57, 70, .1);
+      border: 1px solid rgba(230, 57, 70, .25);
+      color: var(--rp)
+    }
+
+    .tg1 {
+      background: rgba(224, 123, 57, .1);
+      border: 1px solid rgba(224, 123, 57, .25);
+      color: var(--op)
+    }
+
+    .tl8 {
+      background: rgba(201, 162, 39, .1);
+      border: 1px solid rgba(201, 162, 39, .25);
+      color: var(--yp)
+    }
+
+    .mrow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, .04);
+      font-size: 12px
+    }
+
+    .mrow:last-child {
+      border-bottom: none
+    }
+
+    .mk {
+      color: var(--dim)
+    }
+
+    .mv {
+      color: rgba(255, 255, 255, .8);
+      font-weight: 500
+    }
+
+    .sbadge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 500
+    }
+
+    .sc-crit {
+      background: rgba(230, 57, 70, .15);
+      color: var(--rp)
+    }
+
+    .sc-high {
+      background: rgba(224, 123, 57, .15);
+      color: var(--op)
+    }
+
+    .sc-low {
+      background: rgba(201, 162, 39, .15);
+      color: var(--yp)
+    }
+
+    @media(max-width:700px) {
+      .grid2 {
+        grid-template-columns: 1fr
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg"></div>
+  <div class="grid"></div>
+  <div class="wrap">
+    <nav>
+      <a href="/" class="brand">Pure<span>Check</span></a>
+      <a href="/" class="back">← Home</a>
+    </nav>
+    <div class="ph">
+      <h1>Concentration <span
+          style="background:linear-gradient(135deg,var(--gp),#52b788);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Analysis</span>
+      </h1>
+      <p>Upload 5 spectral band images or a single .npy hyperspectral cube</p>
+    </div>
+
+    <div class="grid2">
+      <!-- LEFT -->
+      <div>
+        <div class="panel">
+          <div class="ptitle">Sample Input</div>
+
+          <p class="band-hint">Upload 1 or 5 band images from your sample (e.g. any PNG from your G300, G160 or L8
+            folder). The server will automatically find the correct consecutive bands.</p>
+          <div class="band-grid" id="band-grid"></div>
+          <div class="warn" id="warn" style="display:none"></div>
+
+          <div class="bgrp">
+            <button class="btn btn-p" id="tbtn" disabled>🔬 Test Sample</button>
+            <button class="btn btn-d" id="pbtn" disabled>⬇ PDF Report</button>
+          </div>
+          <div class="bgrp">
+            <button class="btn btn-o" id="rbtn">↺ Reset</button>
+          </div>
+        </div>
+
+        <div class="pcard">
+          <div class="pctitle">Analysis Pipeline</div>
+          <div class="pipe">
+            <span class="ps">5-Band Input</span><span class="pa">→</span>
+            <span class="ps">PCA (80-dim)</span><span class="pa">→</span>
+            <span class="ps">ResNet + 3D CNN</span><span class="pa">→</span>
+            <span class="ps">Classification</span>
+          </div>
+          <div class="legend">
+            <div class="li">
+              <div class="ld" style="background:var(--rp)"></div>G300 &gt;300 mg
+            </div>
+            <div class="li">
+              <div class="ld" style="background:var(--op)"></div>G160 &gt;160 mg
+            </div>
+            <div class="li">
+              <div class="ld" style="background:var(--yp)"></div>L8 &lt;8 mg
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div>
+        <div class="panel" id="lp">
+          <div class="lring"></div>
+          <div class="ltx">Analyzing spectral data...</div>
+          <div class="lst" id="lst">Preprocessing bands</div>
+        </div>
+        <div class="panel" id="ep">
+          <div style="font-size:50px;opacity:.2;margin-bottom:14px">📊</div>
+          <div style="font-size:14px;color:rgba(255,255,255,.25);font-weight:300">Results will appear here</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.15);margin-top:6px;line-height:1.6">Upload bands and click
+            "Test Sample"</div>
+        </div>
+        <div class="panel" id="rp">
+          <div class="verdict" id="vcard">
+            <div class="vico" id="vico"></div>
+            <div style="flex:1">
+              <div class="vbadge" id="vbadge"></div>
+              <div class="vtit" id="vtit"></div>
+              <div class="vdesc" id="vdesc"></div>
+              <div class="vrec" id="vrec"></div>
+            </div>
+          </div>
+          <div class="csec">
+            <div class="chdr"><span class="clbl">Detection Confidence</span><span class="cval" id="cpct">—</span></div>
+            <div class="cbg">
+              <div class="cf" id="cbar"></div>
+            </div>
+          </div>
+          <div class="sgrid">
+            <div class="sc" id="card-g300">
+              <div class="sn cg3" id="score-g300">—</div>
+              <div class="sl_ cg3">G300</div>
+              <div class="ss">&gt;300 mg</div>
+            </div>
+            <div class="sc" id="card-g160">
+              <div class="sn cg1" id="score-g160">—</div>
+              <div class="sl_ cg1">G160</div>
+              <div class="ss">&gt;160 mg</div>
+            </div>
+            <div class="sc" id="card-l8">
+              <div class="sn cl8" id="score-l8">—</div>
+              <div class="sl_ cl8">L8</div>
+              <div class="ss">&lt;8 mg</div>
+            </div>
+          </div>
+          <div class="asec">
+            <div class="ssub">Detected Adulterants</div>
+            <div id="alist"></div>
+          </div>
+          <div>
+            <div class="mrow"><span class="mk">Severity</span><span class="mv" id="msev"></span></div>
+            <div class="mrow"><span class="mk">Inference Time</span><span class="mv" id="mtm"></span></div>
+            <div class="mrow"><span class="mk">Input Type</span><span class="mv" id="minput"></span></div>
+            <div class="mrow"><span class="mk">Model</span><span class="mv">Hybrid ResNet + 3D CNN + PCA</span></div>
+            <div class="mrow"><span class="mk">File</span><span class="mv" id="mfl"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let bandFiles = [null, null, null, null, null];
+    let currentResult = null;
+
+    const tbtn = document.getElementById('tbtn');
+    const pbtn = document.getElementById('pbtn');
+    const lp = document.getElementById('lp');
+    const ep = document.getElementById('ep');
+    const rp = document.getElementById('rp');
+    const warn = document.getElementById('warn');
+
+    // Build 5 band slots
+    const BAND_NAMES = ['Band 1', 'Band 2', 'Band 3', 'Band 4', 'Band 5'];
+    const grid = document.getElementById('band-grid');
+    BAND_NAMES.forEach((name, i) => {
+      const div = document.createElement('div');
+      div.className = 'band-slot'; div.id = `bs-${i}`;
+      div.innerHTML = `
+    <input type="file" id="fi-${i}" accept=".png,.jpg,.jpeg,.tiff,.bmp" onchange="pickBand(event,${i})">
+    <div class="band-num">${name}</div>
+    <div class="band-ico" id="bico-${i}">📷</div>
+    <div class="band-name" id="bname-${i}">click to upload</div>
+    <div class="band-clear" onclick="clearBand(${i})">✕</div>`;
+      grid.appendChild(div);
+    });
+
+    function pickBand(ev, i) {
+      if (ev.target.files[0]) setBand(i, ev.target.files[0]);
+    }
+    function setBand(i, file) {
+      bandFiles[i] = file;
+      document.getElementById('bs-' + i).classList.add('filled');
+      const n = file.name;
+      document.getElementById('bname-' + i).textContent = n.length > 12 ? n.slice(0, 10) + '…' : n;
+      const ext = n.split('.').pop().toLowerCase();
+      if (['png', 'jpg', 'jpeg', 'bmp', 'tiff'].includes(ext)) {
+        const r = new FileReader();
+        r.onload = e => {
+          const old = document.getElementById('bico-' + i);
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.style.cssText = 'width:100%;height:36px;object-fit:cover;border-radius:4px';
+          img.id = 'bico-' + i;
+          old.replaceWith(img);
+        };
+        r.readAsDataURL(file);
+      } else {
+        document.getElementById('bico-' + i).textContent = '📦';
+      }
+      checkReady();
+    }
+    function clearBand(i) {
+      bandFiles[i] = null;
+      document.getElementById('bs-' + i).classList.remove('filled');
+      document.getElementById('bname-' + i).textContent = 'click to upload';
+      document.getElementById('fi-' + i).value = '';
+      const ico = document.getElementById('bico-' + i);
+      if (ico.tagName === 'IMG') {
+        const d = document.createElement('div');
+        d.className = 'band-ico'; d.id = 'bico-' + i; d.textContent = '📷';
+        ico.replaceWith(d);
+      } else ico.textContent = '📷';
+      checkReady();
+    }
+
+    function checkReady() {
+      const filled = bandFiles.filter(f => f != null).length;
+      tbtn.disabled = (filled === 0);
+      warn.style.display = (filled > 0 && filled < 5) ? 'block' : 'none';
+      if (filled > 0 && filled < 5)
+        warn.textContent = `${filled}/5 bands uploaded. You can upload 1–5 bands.`;
+    }
+
+    document.getElementById('rbtn').addEventListener('click', () => {
+      for (let i = 0; i < 5; i++) clearBand(i);
+      currentResult = null; pbtn.disabled = true;
+      showPanel('e'); warn.style.display = 'none';
+    });
+
+    tbtn.addEventListener('click', async () => {
+      showPanel('l'); tbtn.disabled = true;
+      const steps = ['Reading band images...', 'Applying histogram equalisation...', 'Building spectral cube...', 'Running PCA extraction...', 'Classifying concentration level...'];
+      let si = 0;
+      const lstEl = document.getElementById('lst');
+      const iv = setInterval(() => { if (si < steps.length) lstEl.textContent = steps[si++]; }, 650);
+
+      try {
+        const fd = new FormData();
+        bandFiles.forEach((f, i) => { if (f) fd.append(`file_${i}`, f); });
+        const res = await fetch('/api/predict', { method: 'POST', body: fd });
+        clearInterval(iv);
+        if (!res.ok) { const e = await res.json(); throw new Error(e.error || 'Prediction failed'); }
+        currentResult = await res.json();
+        renderResult(currentResult); showPanel('r'); pbtn.disabled = false;
+      } catch (err) {
+        clearInterval(iv); alert('Error: ' + err.message); showPanel('e');
+      } finally {
+        tbtn.disabled = bandFiles.filter(f => f != null).length === 0;
+      }
+    });
+
+    function showPanel(w) {
+      lp.style.display = w === 'l' ? 'block' : 'none';
+      ep.style.display = w === 'e' ? 'block' : 'none';
+      rp.style.display = w === 'r' ? 'block' : 'none';
+    }
+
+    const CMAP = {
+      G300: { vc: 'v-g300', bc: 'bg300', fc: 'fg300', tc: 'tg3', ic: '🚨', sc: 'sc-crit', ck: 'g300' },
+      G160: { vc: 'v-g160', bc: 'bg160', fc: 'fg160', tc: 'tg1', ic: '⚠️', sc: 'sc-high', ck: 'g160' },
+      L8: { vc: 'v-l8', bc: 'bl8', fc: 'fl8', tc: 'tl8', ic: '🔶', sc: 'sc-low', ck: 'l8' },
+    };
+
+    function renderResult(r) {
+      const C = CMAP[r.prediction] || CMAP['L8'];
+      document.getElementById('vcard').className = 'verdict ' + C.vc;
+      document.getElementById('vico').textContent = C.ic;
+      const vb = document.getElementById('vbadge');
+      vb.className = 'vbadge ' + C.bc;
+      vb.textContent = r.prediction + ' — ' + r.full_name;
+      document.getElementById('vtit').textContent = r.level;
+      document.getElementById('vdesc').textContent = r.description;
+      document.getElementById('vrec').textContent = '→ ' + r.recommendation;
+      document.getElementById('cpct').textContent = r.confidence.toFixed(1) + '%';
+      const bar = document.getElementById('cbar');
+      bar.className = 'cf ' + C.fc;
+      setTimeout(() => bar.style.width = r.confidence + '%', 80);
+      document.getElementById('score-g300').textContent = r.raw_scores.g300.toFixed(1) + '%';
+      document.getElementById('score-g160').textContent = r.raw_scores.g160.toFixed(1) + '%';
+      document.getElementById('score-l8').textContent = r.raw_scores.l8.toFixed(1) + '%';
+      ['g300', 'g160', 'l8'].forEach(k => {
+        document.getElementById('card-' + k).classList.toggle('active', k === C.ck);
+      });
+      const al = document.getElementById('alist'); al.innerHTML = '';
+      r.detected_adulterants.forEach(a => {
+        const t = document.createElement('span');
+        t.className = 'atag ' + C.tc; t.textContent = '⚠ ' + a; al.appendChild(t);
+      });
+      const sevMap = { 'Critical': 'sc-crit', 'High': 'sc-high', 'Low': 'sc-low' };
+      document.getElementById('msev').innerHTML =
+        `<span class="sbadge ${sevMap[r.severity] || 'sc-low'}">${r.severity}</span>`;
+      document.getElementById('mtm').textContent = r.inference_time_ms + ' ms';
+      document.getElementById('minput').textContent = r.input_type || '—';
+      document.getElementById('mfl').textContent = r.filename || '—';
+    }
+
+    pbtn.addEventListener('click', () => {
+      if (!currentResult) return;
+      // Collect the first uploaded band image to embed in PDF
+      const imgFile = bandFiles.find(f => f != null);
+      if (imgFile) {
+        const reader = new FileReader();
+        reader.onload = e => generatePDF(currentResult, e.target.result);
+        reader.readAsDataURL(imgFile);
+      } else {
+        generatePDF(currentResult, null);
+      }
+    });
+
+    function generatePDF(r, imgDataUrl) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const W = 210, margin = 28; let y = 20;
+
+      // Colour scheme matching the reference design
+      const titleTeal = [22, 101, 94], black = [20, 20, 20], red = [210, 45, 45],
+        orange = [230, 120, 30], amber = [200, 150, 10],
+        lightGray = [245, 245, 245], midGray = [160, 160, 160], darkGray = [80, 80, 80];
+
+      const PRED_COLORS = {
+        G300: { bar: [230, 57, 70], label: 'ADULTERATED', conc: 'Critical — >300 mg' },
+        G160: { bar: [224, 123, 57], label: 'ADULTERATED', conc: 'High — >160 mg' },
+        L8: { bar: [201, 162, 39], label: 'LOW LEVEL', conc: 'Trace — <8 mg' },
+      };
+      const PC = PRED_COLORS[r.prediction] || PRED_COLORS.L8;
+
+      // ── Title ────────────────────────────────────────────────────────────────
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(22);
+      doc.setTextColor(...titleTeal);
+      doc.text('Food Adulteration Analysis Report', W / 2, y, { align: 'center' });
+      y += 5;
+
+      // Teal underline
+      doc.setDrawColor(...titleTeal);
+      doc.setLineWidth(1.2);
+      const lineW = 80;
+      doc.line(W / 2 - lineW / 2, y, W / 2 + lineW / 2, y);
+      y += 14;
+
+      // ── Report ID ────────────────────────────────────────────────────────────
+      const rid = 'PC-' + Date.now().toString(36).toUpperCase();
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(...midGray);
+      doc.text('Report ID: ' + rid, W / 2, y, { align: 'center' });
+      y += 10;
+
+      // ── Sample image (embedded if available, placeholder otherwise) ──────────
+      const imgW = 120, imgH = 60, imgX = (W - imgW) / 2;
+      if (imgDataUrl) {
+        try {
+          doc.addImage(imgDataUrl, 'JPEG', imgX, y, imgW, imgH, undefined, 'FAST');
+        } catch (e) {
+          // fallback to placeholder if image format unsupported
+          doc.setFillColor(...lightGray);
+          doc.setDrawColor(...midGray);
+          doc.setLineWidth(0.4);
+          doc.roundedRect(imgX, y, imgW, imgH, 3, 3, 'FD');
+          doc.setFontSize(9); doc.setTextColor(...midGray);
+          doc.text('Sample: ' + r.filename, W / 2, y + imgH / 2, { align: 'center' });
+        }
+      } else {
+        doc.setFillColor(...lightGray);
+        doc.setDrawColor(...midGray);
+        doc.setLineWidth(0.4);
+        doc.roundedRect(imgX, y, imgW, imgH, 3, 3, 'FD');
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9); doc.setTextColor(...midGray);
+        doc.text('Sample: ' + r.filename, W / 2, y + imgH / 2, { align: 'center' });
+        doc.text('Analysed via hyperspectral imaging', W / 2, y + imgH / 2 + 6, { align: 'center' });
+      }
+      y += imgH + 14;
+
+      // ── Analysis Result label ────────────────────────────────────────────────
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.setTextColor(...black);
+      doc.text('Analysis Result:', margin, y);
+      y += 8;
+
+      // Coloured result banner
+      doc.setFillColor(...PC.bar);
+      doc.roundedRect(margin, y, W - margin * 2, 16, 3, 3, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.text(PC.label, W / 2, y + 10.5, { align: 'center' });
+      y += 26;
+
+      // ── Adulteration Concentration ───────────────────────────────────────────
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.setTextColor(...black);
+      doc.text('Adulteration Concentration:', margin, y);
+      y += 10;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(34);
+      doc.setTextColor(...PC.bar);
+      doc.text(r.confidence.toFixed(2) + '%', W / 2, y, { align: 'center' });
+      y += 6;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(...darkGray);
+      doc.text(PC.conc, W / 2, y, { align: 'center' });
+      y += 14;
+
+      // ── Detected Adulterants ─────────────────────────────────────────────────
+      if (r.detected_adulterants && r.detected_adulterants.length) {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(...black);
+        doc.text('Detected Adulterants:', margin, y);
+        y += 7;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(...darkGray);
+        r.detected_adulterants.forEach(a => {
+          doc.text('• ' + a, margin + 4, y);
+          y += 6;
+        });
+        y += 4;
+      }
+
+      // ── Recommendation ───────────────────────────────────────────────────────
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(...black);
+      doc.text('Recommendation:', margin, y);
+      y += 7;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(...darkGray);
+      const recLines = doc.splitTextToSize(r.recommendation, W - margin * 2 - 4);
+      doc.text(recLines, margin + 4, y);
+      y += recLines.length * 6 + 10;
+
+      // ── Timestamp ────────────────────────────────────────────────────────────
+      doc.setDrawColor(220, 220, 220);
+      doc.setLineWidth(0.3);
+      doc.line(margin, y, W - margin, y);
+      y += 7;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(...midGray);
+      doc.text('Timestamp: ' + new Date(r.timestamp).toLocaleString(), margin, y);
+      y += 6;
+      doc.text('Checked using AI-powered hyperspectral hybrid model', margin, y);
+      y += 14;
+
+      // ── Footer ───────────────────────────────────────────────────────────────
+      const fy = 285;
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.3);
+      doc.line(margin, fy, W - margin, fy);
+      doc.setFontSize(8);
+      doc.setTextColor(...midGray);
+      doc.text('This report is generated by an AI system for informational purposes.', W / 2, fy + 5, { align: 'center' });
+      doc.text('For critical decisions, consult with certified food safety professionals.', W / 2, fy + 10, { align: 'center' });
+
+      doc.save(`food-adulteration-report-${Date.now()}.pdf`);
+    }
+  </script>
+</body>
+
+</html>

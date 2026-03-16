@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PureCheck — Food Adulteration Detection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --green: #2d6a4f;
+      --green-light: #40916c;
+      --green-pale: #95d5b2;
+      --cream: #fefae0;
+      --warm: #dda15e;
+      --dark: #081c15;
+      --text: #1b4332;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--dark);
+      overflow-x: hidden;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Animated botanical background */
+    .bg-layer {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, #1b4332cc 0%, transparent 70%),
+        radial-gradient(ellipse 60% 80% at 100% 100%, #40916c44 0%, transparent 60%),
+        radial-gradient(ellipse 50% 50% at 0% 80%, #2d6a4f55 0%, transparent 60%),
+        linear-gradient(160deg, #081c15 0%, #0d2818 40%, #1a3a2a 100%);
+      z-index: 0;
+    }
+
+    /* Floating particles */
+    .particles {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(149, 213, 178, 0.15);
+      animation: float linear infinite;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(110vh) scale(0); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 0.6; }
+      100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+    }
+
+    /* Grid overlay for sci-fi feel */
+    .grid-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background-image:
+        linear-gradient(rgba(64, 145, 108, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(64, 145, 108, 0.05) 1px, transparent 1px);
+      background-size: 60px 60px;
+      animation: gridShift 20s linear infinite;
+    }
+
+    @keyframes gridShift {
+      0% { background-position: 0 0; }
+      100% { background-position: 60px 60px; }
+    }
+
+    /* Scan line animation */
+    .scan-line {
+      position: absolute;
+      left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(149, 213, 178, 0.4), transparent);
+      z-index: 2;
+      animation: scanLine 8s ease-in-out infinite;
+    }
+
+    @keyframes scanLine {
+      0%, 100% { top: -2px; opacity: 0; }
+      5% { opacity: 1; }
+      95% { opacity: 0.3; }
+      99% { top: 100%; opacity: 0; }
+    }
+
+    /* ── CONTENT ── */
+    .content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 40px 24px;
+      max-width: 800px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(64, 145, 108, 0.15);
+      border: 1px solid rgba(149, 213, 178, 0.3);
+      color: var(--green-pale);
+      padding: 6px 18px;
+      border-radius: 100px;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 500;
+      margin-bottom: 28px;
+      animation: fadeDown 0.8s ease forwards;
+      opacity: 0;
+      animation-delay: 0.2s;
+    }
+
+    .badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green-pale);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    .title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(52px, 10vw, 96px);
+      font-weight: 900;
+      line-height: 0.95;
+      color: #fff;
+      margin-bottom: 8px;
+      animation: fadeDown 0.8s ease forwards;
+      opacity: 0;
+      animation-delay: 0.4s;
+    }
+
+    .title span {
+      display: block;
+      background: linear-gradient(135deg, #95d5b2, #52b788, #40916c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle-line {
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--green-pale), var(--warm));
+      border-radius: 2px;
+      margin: 20px auto;
+      animation: fadeDown 0.8s ease forwards;
+      opacity: 0;
+      animation-delay: 0.6s;
+    }
+
+    .description {
+      color: rgba(255,255,255,0.65);
+      font-size: clamp(15px, 2.5vw, 18px);
+      line-height: 1.75;
+      font-weight: 300;
+      max-width: 560px;
+      margin: 0 auto 40px;
+      animation: fadeDown 0.8s ease forwards;
+      opacity: 0;
+      animation-delay: 0.8s;
+    }
+
+    .description strong {
+      color: var(--green-pale);
+      font-weight: 500;
+    }
+
+    /* Stat cards */
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 44px;
+      flex-wrap: wrap;
+      animation: fadeDown 0.8s ease forwards;
+      opacity: 0;
+      animation-delay: 1s;
+    }
+
+    .stat-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(149, 213, 178, 0.15);
+      border-radius: 12px;
+      padding: 14px 24px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+    }
+
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--green-pale);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* CTA Button */
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: linear-gradient(135deg, var(--green-light), var(--green));
+      color: #fff;
+      text-decoration: none;
+      padding: 18px 44px;
+      border-radius: 100px;
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 30px rgba(64, 145, 108, 0.35);
+      animation: fadeDown 0.8s ease forwards;
+      opacity: 0;
+      animation-delay: 1.1s;
+    }
+
+    .cta-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 40px rgba(64, 145, 108, 0.5);
+      background: linear-gradient(135deg, #52b788, var(--green-light));
+    }
+
+    .cta-btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-icon {
+      width: 22px; height: 22px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      transition: transform 0.3s ease;
+    }
+
+    .cta-btn:hover .btn-icon {
+      transform: translateX(3px);
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── ABOUT SECTION ── */
+    .about-section {
+      position: relative;
+      z-index: 10;
+      padding: 100px 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-eyebrow {
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--green-pale);
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(32px, 5vw, 52px);
+      color: #fff;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 24px;
+    }
+
+    .section-text {
+      color: rgba(255,255,255,0.55);
+      font-size: 16px;
+      line-height: 1.8;
+      max-width: 580px;
+      font-weight: 300;
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+      margin-bottom: 80px;
+    }
+
+    .threat-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .threat-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-left: 3px solid var(--warm);
+      border-radius: 0 12px 12px 0;
+      padding: 16px 20px;
+      transition: all 0.3s ease;
+    }
+
+    .threat-item:hover {
+      background: rgba(255,255,255,0.05);
+      border-left-color: var(--green-pale);
+      transform: translateX(4px);
+    }
+
+    .threat-icon {
+      font-size: 22px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .threat-title {
+      color: #fff;
+      font-weight: 500;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .threat-desc {
+      color: rgba(255,255,255,0.45);
+      font-size: 13px;
+      line-height: 1.5;
+      font-weight: 300;
+    }
+
+    /* Feature cards */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 80px;
+    }
+
+    .feature-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(149, 213, 178, 0.1);
+      border-radius: 20px;
+      padding: 32px 28px;
+      transition: all 0.4s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--green-pale), transparent);
+      transform: scaleX(0);
+      transition: transform 0.4s ease;
+    }
+
+    .feature-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .feature-card:hover {
+      background: rgba(64, 145, 108, 0.08);
+      border-color: rgba(149, 213, 178, 0.25);
+      transform: translateY(-6px);
+    }
+
+    .feature-icon {
+      font-size: 32px;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    .feature-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      color: #fff;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .feature-text {
+      color: rgba(255,255,255,0.45);
+      font-size: 14px;
+      line-height: 1.7;
+      font-weight: 300;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 40px 24px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.25);
+      font-size: 13px;
+    }
+
+    .footer span { color: var(--green-pale); }
+
+    /* Scroll indicator */
+    .scroll-hint {
+      position: absolute;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: rgba(255,255,255,0.3);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      animation: fadeDown 1s ease forwards;
+      animation-delay: 1.5s;
+      opacity: 0;
+    }
+
+    .scroll-mouse {
+      width: 22px; height: 36px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 11px;
+      display: flex;
+      justify-content: center;
+      padding-top: 6px;
+    }
+
+    .scroll-wheel {
+      width: 3px; height: 6px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 2px;
+      animation: scrollWheel 2s ease-in-out infinite;
+    }
+
+    @keyframes scrollWheel {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(10px); opacity: 0; }
+    }
+
+    @media (max-width: 768px) {
+      .about-grid { grid-template-columns: 1fr; gap: 40px; }
+      .features { grid-template-columns: 1fr; }
+      .stats { gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background layers -->
+  <div class="bg-layer"></div>
+  <div class="grid-overlay"></div>
+  <div class="scan-line"></div>
+
+  <!-- Floating particles -->
+  <div class="particles" id="particles"></div>
+
+  <!-- ── HERO SECTION ── -->
+  <section class="hero">
+    <div class="content">
+      <div class="badge">
+        <div class="badge-dot"></div>
+        AI-Powered Spectral Analysis
+      </div>
+
+      <h1 class="title">
+        Pure<span>Check</span>
+      </h1>
+
+      <div class="subtitle-line"></div>
+
+      <p class="description">
+        Advanced <strong>hyperspectral imaging analysis</strong> powered by a
+        Hybrid ResNet + 3D CNN + PCA deep learning model. Classify food
+        adulteration concentration — <strong>G300</strong>, <strong>G160</strong>,
+        or <strong>L8</strong> — with laboratory-grade accuracy in seconds.
+      </p>
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-num">97.4%</div>
+          <div class="stat-label">Accuracy</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">&lt;2s</div>
+          <div class="stat-label">Analysis Time</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">3</div>
+          <div class="stat-label">Output Classes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">100%</div>
+          <div class="stat-label">Non-destructive</div>
+        </div>
+      </div>
+
+      <a href="/test" class="cta-btn">
+        Test Sample
+        <span class="btn-icon">→</span>
+      </a>
+    </div>
+
+    <div class="scroll-hint">
+      <div class="scroll-mouse"><div class="scroll-wheel"></div></div>
+      Scroll
+    </div>
+  </section>
+
+  <!-- ── ABOUT SECTION ── -->
+  <section class="about-section">
+    <div class="about-grid">
+      <div>
+        <p class="section-eyebrow">The Problem</p>
+        <h2 class="section-title">Food Adulteration is a Silent Threat</h2>
+        <p class="section-text">
+          Food adulteration — the intentional addition of inferior, harmful, or
+          foreign substances — affects millions globally. From synthetic dyes in
+          spices to chemical preservatives in dairy, these invisible contaminants
+          pose serious health risks that traditional inspection methods fail to catch.
+        </p>
+      </div>
+      <div class="threat-list">
+        <div class="threat-item">
+          <div class="threat-icon">🌶️</div>
+          <div>
+            <div class="threat-title">Spice & Condiment Adulteration</div>
+            <div class="threat-desc">Sudan dyes, chalk powder, and artificial colorants mixed into spices to enhance appearance and cut costs.</div>
+          </div>
+        </div>
+        <div class="threat-item">
+          <div class="threat-icon">🥛</div>
+          <div>
+            <div class="threat-title">Dairy Product Contamination</div>
+            <div class="threat-desc">Melamine, starch, and detergents added to milk and dairy products to inflate protein content readings.</div>
+          </div>
+        </div>
+        <div class="threat-item">
+          <div class="threat-icon">🫒</div>
+          <div>
+            <div class="threat-title">Oil & Fat Substitution</div>
+            <div class="threat-desc">Cheaper oils blended into premium varieties like olive oil, argan oil, and ghee without disclosure.</div>
+          </div>
+        </div>
+        <div class="threat-item">
+          <div class="threat-icon">🍯</div>
+          <div>
+            <div class="threat-title">Sweetener Manipulation</div>
+            <div class="threat-desc">High-fructose corn syrup and rice syrup used to dilute natural honey, undermining its health value.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-bottom: 40px;">
+      <p class="section-eyebrow">Our Technology</p>
+      <h2 class="section-title" style="margin-bottom:0">How PureCheck Detects Adulteration</h2>
+    </div>
+
+    <div class="features">
+      <div class="feature-card">
+        <span class="feature-icon">🔬</span>
+        <div class="feature-title">Hyperspectral Imaging</div>
+        <p class="feature-text">Captures spectral data across 30+ wavelength bands, far beyond what human eyes or standard cameras can perceive. Each substance has a unique spectral fingerprint.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🧠</span>
+        <div class="feature-title">Deep Learning Model</div>
+        <p class="feature-text">A Hybrid ResNet + 3D CNN architecture extracts spatial-spectral features simultaneously, trained on thousands of pure and adulterated food samples.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📊</span>
+        <div class="feature-title">PCA Dimensionality Reduction</div>
+        <p class="feature-text">Principal Component Analysis compresses high-dimensional spectral data into key discriminative features, enabling fast and accurate classification.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">⚡</span>
+        <div class="feature-title">Real-time Analysis</div>
+        <p class="feature-text">Upload a hyperspectral image and receive a full adulteration report with confidence scores and detected contaminants in under 2 seconds.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📄</span>
+        <div class="feature-title">PDF Reports</div>
+        <p class="feature-text">Generate downloadable, professional PDF reports suitable for regulatory compliance, supply chain documentation, or consumer transparency.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔒</span>
+        <div class="feature-title">Non-Destructive Testing</div>
+        <p class="feature-text">No chemicals or physical alteration required. The food sample is preserved entirely — analyze and consume, or continue through the supply chain.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    PureCheck &nbsp;·&nbsp; Food Adulteration Detection System &nbsp;·&nbsp;
+    Powered by <span>Hybrid ResNet + 3D CNN + PCA</span>
+  </footer>
+
+  <script>
+    // Generate floating particles
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 25; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = Math.random() * 8 + 4;
+      p.style.cssText = `
+        width: ${size}px;
+        height: ${size}px;
+        left: ${Math.random() * 100}%;
+        animation-duration: ${Math.random() * 15 + 10}s;
+        animation-delay: ${Math.random() * 10}s;
+      `;
+      container.appendChild(p);
+    }
+
+    // Scroll-reveal for about section
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.style.opacity = '1';
+          e.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.feature-card, .threat-item, .about-grid > div').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(30px)';
+      el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+      observer.observe(el);
+    });
+  </script>
+</body>
+</html>
