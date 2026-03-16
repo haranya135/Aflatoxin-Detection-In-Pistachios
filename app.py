@@ -12,7 +12,7 @@ API:
   GET  /api/status    — model status
 """
 
-import os, re, time, json, hashlib, glob
+import os, time, json, hashlib, glob
 from datetime import datetime
 
 import numpy as np
@@ -26,19 +26,7 @@ app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024
 app.config['SECRET_KEY'] = 'purecheck-2025'
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'tiff', 'tif', 'bmp'}
-# Search for dataset/train starting from app directory, then parent dirs
-def _find_dataset_train():
-    base = os.path.dirname(os.path.abspath(__file__))
-    for search_dir in [base, os.path.dirname(base),
-                       os.path.expanduser('~/Downloads')]:
-        candidate = os.path.join(search_dir, 'dataset', 'train')
-        if os.path.isdir(candidate):
-            print(f'[INFO] Found dataset at: {candidate}')
-            return candidate
-    print('[WARN] dataset/train not found — upload-based inference will use fallback')
-    return os.path.join(base, 'dataset', 'train')
-
-DATASET_TRAIN_PATH = _find_dataset_train()
+# No server dataset required — inference runs purely on uploaded files.
 
 IMG_DEPTH  = 5
 IMG_HEIGHT = 64
@@ -194,50 +182,17 @@ def save_upload(file_obj, suffix=''):
 
 def get_bands_for_upload(uploaded_paths):
     """
-    Given 1–5 uploaded files, return 5 server-side consecutive band paths.
-    Detects class from filename → finds dataset/train/CLASS/ folder →
-    returns get_middle_5() of that folder (always correct, always consistent).
+    Use the uploaded files directly — no server dataset needed.
+    Pads to 5 by repeating the last file if fewer than 5 uploaded.
+    The uploaded files are already processed with equalizeHist in
+    load_band_equalize(), so this is all that is needed.
     """
-    first_name = os.path.basename(uploaded_paths[0])
-    print(f'[BANDS] uploaded file: {first_name}')
-
-    # Strip timestamp prefix added by save_upload (e.g. "1234567890_G300_...")
-    clean_name = re.sub(r'^\d+_', '', first_name)
-    print(f'[BANDS] clean name: {clean_name}')
-
-    cls = None
-    for candidate in ['G300', 'G160', 'L8']:
-        if clean_name.upper().startswith(candidate):
-            cls = candidate
-            print(f'[BANDS] detected class: {cls}')
-            break
-
-    if cls is None:
-        print(f'[BANDS] WARNING: could not detect class from "{clean_name}"')
-
-    if cls and os.path.exists(DATASET_TRAIN_PATH):
-        folder = os.path.join(DATASET_TRAIN_PATH, cls)
-        if os.path.exists(folder):
-            # Always use get_middle_5 — guaranteed correct, same as debug_inference.py
-            selected = get_middle_5(folder)
-            print(f'[BANDS] using middle 5 from {cls}/: '
-                  f'{[os.path.basename(f) for f in selected]}')
-            return selected
-        else:
-            print(f'[BANDS] WARNING: folder not found: {folder}')
-            print(f'[BANDS] DATASET_TRAIN_PATH={DATASET_TRAIN_PATH}')
-            print(f'[BANDS] Exists: {os.path.exists(DATASET_TRAIN_PATH)}')
-            if os.path.exists(DATASET_TRAIN_PATH):
-                print(f'[BANDS] Contents: {os.listdir(DATASET_TRAIN_PATH)}')
-    else:
-        print(f'[BANDS] WARNING: DATASET_TRAIN_PATH not found: {DATASET_TRAIN_PATH}')
-
-    # Fallback: pad uploaded files — will likely be wrong but at least won't crash
     paths = list(uploaded_paths)
     while len(paths) < IMG_DEPTH:
         paths.append(paths[-1])
-    print(f'[BANDS] FALLBACK: using uploaded files (may be inaccurate)')
-    return paths[:IMG_DEPTH]
+    paths = paths[:IMG_DEPTH]
+    print(f'[BANDS] using uploaded files: {[os.path.basename(p) for p in paths]}')
+    return paths
 
 
 def run_inference(folder):
